@@ -3,17 +3,20 @@ import {ReservoirService} from "./reservoir/reservoir.service";
 import Openfort, {SignPayloadRequest, SignPayloadResponse} from "@openfort/openfort-node";
 import {hashTypedData} from "viem";
 import {AxiosError} from "axios";
+import {SignatureValidator} from "./signature-validator";
 
 export class Marketplace {
     private readonly openfort: Openfort;
     private readonly reservoirService: ReservoirService;
+    private readonly signatureValidator: SignatureValidator;
 
     constructor() {
         this.reservoirService = new ReservoirService();
         this.openfort = new Openfort(process.env.OPENFORT_PRIVATE_KEY!);
-
+        this.signatureValidator = new SignatureValidator();
     }
-    public async listAsset(sellerOpenfortId: string) {
+
+    public async listAsset(sellerOpenfortId: string, verifySignature: boolean = false) {
 
         // ignore profile checks, assume it exists
         const profile = await this.openfort.players.get({id: sellerOpenfortId});
@@ -40,7 +43,7 @@ export class Marketplace {
                 "expirationTime": 1708935893009,
                 "chainId": 13337
             });
-        } catch(error) {
+        } catch (error) {
             if (error instanceof AxiosError) {
                 console.error(`Encountered an issue in getListingSteps: ${error.response?.status} ${JSON.stringify(error.response?.data)}`);
             }
@@ -82,6 +85,13 @@ export class Marketplace {
         }
 
         signature = signatureResponse.signature;
+
+        // this is a copy of verification logic from Reservoir:
+        // https://github.com/reservoirprotocol/indexer/blob/main/packages/sdk/src/seaport-v1.5/order.ts#L84
+        // with removed bloat, reduced only to the place where we know it actually fails in
+        if (verifySignature) {
+            this.signatureValidator.checkSignature(value, signature);
+        }
 
         let createListingResponse: PostOrderV4Response;
         try {
