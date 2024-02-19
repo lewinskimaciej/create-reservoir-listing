@@ -8,18 +8,20 @@ console.info('Start');
 
 const marketplace = new Marketplace();
 
-try {
-    const createdOrderUsingOldProfile = await marketplace.listAsset(process.env.V4_PROFILE_ID!);
-    console.info(`Created order using ${process.env.V4_PROFILE_ID!}, orderId: ${createdOrderUsingOldProfile}`)
-} catch (e) {
-    console.error(e);
-}
-try {
-    const createdOrderUsingNewProfile = await marketplace.listAsset(process.env.V5_PROFILE_ID!);
-    console.info(`Created order using ${process.env.V4_PROFILE_ID!}, orderId: ${createdOrderUsingNewProfile}`)
+(async () => {
+    try {
+        const createdOrderUsingOldProfile = await marketplace.listAsset(process.env.V4_PROFILE_ID!);
+        console.info(`Created order using ${process.env.V4_PROFILE_ID!}, orderId: ${createdOrderUsingOldProfile}`)
+    } catch (e) {
+        console.error(e);
+    }
+    try {
+        const createdOrderUsingNewProfile = await marketplace.listAsset(process.env.V5_PROFILE_ID!);
+        console.info(`Created order using ${process.env.V4_PROFILE_ID!}, orderId: ${createdOrderUsingNewProfile}`)
 
-} catch (e) {
-    console.error(e);
-}
+    } catch (e) {
+        console.error(e);
+    }
 
-console.info('End');
+    console.info('End');
+})();

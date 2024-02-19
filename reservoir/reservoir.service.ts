@@ -9,7 +9,7 @@ export class ReservoirService {
         orderKind: Model503OrderKind;
         listingTime: number;
         expirationTime: number;
-        maker: any;
+        maker: string;
         currency: string;
         token: string;
     }) {

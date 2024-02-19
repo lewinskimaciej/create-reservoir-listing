@@ -2,6 +2,7 @@ import {GetExecuteListV5Response, Model455, Model508, PostOrderV4Response} from 
 import {ReservoirService} from "./reservoir.service";
 import Openfort, {SignPayloadRequest, SignPayloadResponse} from "@openfort/openfort-node";
 import {hashTypedData} from "viem";
+import {AxiosError} from "axios";
 
 export class Marketplace {
     private readonly openfort: Openfort;
@@ -16,8 +17,10 @@ export class Marketplace {
 
         // ignore profile checks, assume it exists
         const profile = await this.openfort.players.get({id: sellerOpenfortId});
-        const sellerAccountAddress = profile!.accounts![0].address
+        const profileAccount = await this.openfort.accounts.get({id: profile!.accounts![0].id});
+        const sellerAccountAddress = profileAccount.address
 
+        console.info(`Listing using Player Profile ${sellerOpenfortId} (${profile?.name}), Account Address: ${sellerAccountAddress}, Account type: ${profileAccount.accountType}`);
         // ignore token balance checks for simplicity
         // ignore seaport contract approval too
 
@@ -25,17 +28,24 @@ export class Marketplace {
 
         let getExecuteListingResponse: GetExecuteListV5Response;
         // get the data to sign
-        getExecuteListingResponse = await this.reservoirService.getListingSteps({
-            "maker": sellerAccountAddress,
-            "token": "0xd717CC9f5F68BBc4f0bEE120b26004bfd65f272e:0",
-            "quantity": 1,
-            "weiPrice": "1000000000000000",
-            "orderKind": "seaport-v1.5",
-            "currency": "0x0000000000000000000000000000000000000000",
-            "listingTime": 1708331093009,
-            "expirationTime": 1708935893009,
-            "chainId": 13337
-        });
+        try {
+            getExecuteListingResponse = await this.reservoirService.getListingSteps({
+                "maker": sellerAccountAddress,
+                "token": "0xd717CC9f5F68BBc4f0bEE120b26004bfd65f272e:0",
+                "quantity": 1,
+                "weiPrice": "1000000000000000",
+                "orderKind": "seaport-v1.5",
+                "currency": "0x0000000000000000000000000000000000000000",
+                "listingTime": 1708331093009,
+                "expirationTime": 1708935893009,
+                "chainId": 13337
+            });
+        } catch(error) {
+            if (error instanceof AxiosError) {
+                console.error(`Encountered an issue in getListingSteps: ${error.response?.status} ${JSON.stringify(error.response?.data)}`);
+            }
+            throw new Error(`Failed getting listing steps`);
+        }
 
         if (getExecuteListingResponse.steps?.length)
             steps.push(...getExecuteListingResponse.steps);
@@ -55,7 +65,7 @@ export class Marketplace {
         try {
             // sign the order
             signatureResponse = await this.openfort.accounts.signPayload({
-                id: sellerOpenfortId,
+                id: profileAccount.id,
                 hash,
                 domain,
                 types,
@@ -63,6 +73,7 @@ export class Marketplace {
                 value,
             });
         } catch (error: any) {
+            console.error(error);
             throw new Error('Signing payload to listAsset');
         }
 
@@ -87,6 +98,9 @@ export class Marketplace {
                 signature: signature,
             });
         } catch (error: any) {
+            if (error instanceof AxiosError) {
+                console.error(`Failed publishing signed order, ${error.response?.status}, ${JSON.stringify(error.response?.data)}`);
+            }
             throw new Error('Failed to publish signed order');
         }
 
