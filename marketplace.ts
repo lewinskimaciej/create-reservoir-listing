@@ -1,5 +1,5 @@
-import {GetExecuteListV5Response, Model455, Model508, PostOrderV4Response} from "./reservoir.types.generated";
-import {ReservoirService} from "./reservoir.service";
+import {GetExecuteListV5Response, Model455, Model508, PostOrderV4Response} from "./reservoir/reservoir.types.generated";
+import {ReservoirService} from "./reservoir/reservoir.service";
 import Openfort, {SignPayloadRequest, SignPayloadResponse} from "@openfort/openfort-node";
 import {hashTypedData} from "viem";
 import {AxiosError} from "axios";

@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import {Marketplace} from "./reservoir/marketplace.js";
+import {Marketplace} from "./marketplace";
 
 dotenv.config();
 console.info('Start');
