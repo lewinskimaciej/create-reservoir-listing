@@ -47,7 +47,7 @@ export class SignatureValidator {
         );
         const sigHash = iface.getSighash("isValidSignature");
         if (result !== sigHash) {
-            throw new Error(`Invalid signature. Failed on getSighash("isValidSignature"). Result: ${result}, sigHash: ${sigHash}, offerer: ${params.offerer}, signature: ${signature}`);
+            throw new Error(`Invalid signature. Failed on getSighash("isValidSignature"). Result: ${result}, sigHash: ${sigHash}, offerer: ${params.offerer}, signature: ${signature}, eip712Hash: ${eip712Hash}`);
         }
     }
 }
